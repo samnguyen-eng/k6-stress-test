@@ -1,0 +1,78 @@
+name: Stress Test — 1500 TPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      reservation_date:
+        description: 'Reservation date (YYYY-MM-DD)'
+        required: true
+        default: '2026-06-10'
+      rate:
+        description: 'Target TPS'
+        required: false
+        default: '1500'
+      duration:
+        description: 'Test duration'
+        required: false
+        default: '3m'
+
+jobs:
+  stress-test:
+    name: k6 Stress Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          curl -L https://github.com/grafana/k6/releases/download/v0.54.0/k6-v0.54.0-linux-amd64.tar.gz \
+            -o k6.tar.gz
+          tar -xzf k6.tar.gz
+          sudo mv k6-v0.54.0-linux-amd64/k6 /usr/local/bin/k6
+          k6 version
+
+      - name: Warm up Cloud Run
+        run: |
+          curl -s -o /dev/null -w "Warm-up GET /spaces → HTTP %{http_code}\n" \
+            "${{ secrets.BASE_URL }}/api/parking/spaces"
+
+      - name: Pre-warm instances (100 req/s × 30s)
+        run: |
+          K6_LOG_LEVEL=error k6 run scripts/reserve-stress.js \
+            -e "BASE_URL=${{ secrets.BASE_URL }}" \
+            -e "RATE=100" \
+            -e "DURATION=30s" \
+            -e "USER_COUNT=1000" \
+            -e "SETUP_USER_LIMIT=100" \
+            -e "PRE_ALLOCATED_VUS=200" \
+            -e "MAX_VUS=200" \
+            -e "RESERVATION_DATE=${{ github.event.inputs.reservation_date }}" \
+            -e "PASSWORD=${{ secrets.K6_PASSWORD }}" \
+            -e "SETUP_TIMEOUT=5m" \
+            > /dev/null 2>&1 || true
+          echo "Pre-warm done. Waiting 5s..."
+          sleep 5
+
+      - name: Run stress test — ${{ github.event.inputs.rate }} TPS × ${{ github.event.inputs.duration }}
+        run: |
+          K6_LOG_LEVEL=error k6 run scripts/reserve-stress.js \
+            -e "BASE_URL=${{ secrets.BASE_URL }}" \
+            -e "RATE=${{ github.event.inputs.rate }}" \
+            -e "DURATION=${{ github.event.inputs.duration }}" \
+            -e "USER_COUNT=1000" \
+            -e "SETUP_USER_LIMIT=1000" \
+            -e "PRE_ALLOCATED_VUS=500" \
+            -e "MAX_VUS=500" \
+            -e "RESERVATION_DATE=${{ github.event.inputs.reservation_date }}" \
+            -e "PASSWORD=${{ secrets.K6_PASSWORD }}" \
+            -e "SETUP_TIMEOUT=10m" \
+            --summary-export=summary.json
+
+      - name: Upload summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-summary-${{ github.event.inputs.reservation_date }}
+          path: summary.json
