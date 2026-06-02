@@ -63,8 +63,8 @@ jobs:
             -e "DURATION=${{ github.event.inputs.duration }}" \
             -e "USER_COUNT=1000" \
             -e "SETUP_USER_LIMIT=1000" \
-            -e "PRE_ALLOCATED_VUS=500" \
-            -e "MAX_VUS=500" \
+            -e "PRE_ALLOCATED_VUS=200" \
+            -e "MAX_VUS=200" \
             -e "RESERVATION_DATE=${{ github.event.inputs.reservation_date }}" \
             -e "PASSWORD=${{ secrets.K6_PASSWORD }}" \
             -e "SETUP_TIMEOUT=10m" \
