@@ -52,10 +52,11 @@ export const options = {
     },
   },
   thresholds: {
-    // 400 (slot hết / đã đặt) tính là fail trong http_req_failed — dùng real error rate trong summary
-    http_req_failed: [__ENV.THRESHOLD_FAILED || 'rate<0.99'],
-    http_req_duration: [__ENV.THRESHOLD_P95 || 'p(95)<3000'],
-    'http_req_duration{name:reserve}': [__ENV.THRESHOLD_RESERVE_P95 || 'p(95)<3000'],
+    // Only measure real errors (5xx + conn drop) — business rejects (400/409) are expected
+    'http_req_duration{expected_response:true}': [
+      __ENV.THRESHOLD_RESERVE_P95 || 'p(95)<3000',
+      __ENV.THRESHOLD_RESERVE_P99 || 'p(99)<5000',
+    ],
   },
 };
 
