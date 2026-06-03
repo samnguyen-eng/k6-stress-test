@@ -14,7 +14,7 @@ on:
       duration:
         description: 'Test duration'
         required: false
-        default: '3m'
+        default: '4m'
 
 jobs:
   stress-test:
