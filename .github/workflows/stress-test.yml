@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       reservation_date:
-        description: 'Reservation date (YYYY-MM-DD)'
-        required: true
-        default: '2026-06-10'
+        description: 'Reservation date (YYYY-MM-DD) — dùng ngày chưa có data'
+        required: false
+        default: ''
       rate:
         description: 'Target TPS'
         required: false
@@ -57,15 +57,19 @@ jobs:
 
       - name: Run stress test — ${{ github.event.inputs.rate }} TPS × ${{ github.event.inputs.duration }}
         run: |
+          DATE="${{ github.event.inputs.reservation_date }}"
+          if [ -z "$DATE" ]; then DATE=$(date +%Y-%m-%d); fi
+          echo "Using reservation date: $DATE"
+
           K6_LOG_LEVEL=error k6 run scripts/reserve-stress.js \
             -e "BASE_URL=${{ secrets.BASE_URL }}" \
             -e "RATE=${{ github.event.inputs.rate }}" \
             -e "DURATION=${{ github.event.inputs.duration }}" \
             -e "USER_COUNT=1000" \
             -e "SETUP_USER_LIMIT=1000" \
-            -e "PRE_ALLOCATED_VUS=1000" \
-            -e "MAX_VUS=1000" \
-            -e "RESERVATION_DATE=${{ github.event.inputs.reservation_date }}" \
+            -e "PRE_ALLOCATED_VUS=200" \
+            -e "MAX_VUS=200" \
+            -e "RESERVATION_DATE=$DATE" \
             -e "PASSWORD=${{ secrets.K6_PASSWORD }}" \
             -e "SETUP_TIMEOUT=10m" \
             --summary-export=summary.json
