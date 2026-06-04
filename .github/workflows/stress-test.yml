@@ -65,10 +65,10 @@ jobs:
             -e "BASE_URL=${{ secrets.BASE_URL }}" \
             -e "RATE=${{ github.event.inputs.rate }}" \
             -e "DURATION=${{ github.event.inputs.duration }}" \
-            -e "USER_COUNT=1000" \
-            -e "SETUP_USER_LIMIT=1000" \
-            -e "PRE_ALLOCATED_VUS=200" \
-            -e "MAX_VUS=200" \
+            -e "USER_COUNT=1500" \
+            -e "SETUP_USER_LIMIT=1500" \
+            -e "PRE_ALLOCATED_VUS=1500" \
+            -e "MAX_VUS=1500" \
             -e "RESERVATION_DATE=$DATE" \
             -e "PASSWORD=${{ secrets.K6_PASSWORD }}" \
             -e "SETUP_TIMEOUT=10m" \
