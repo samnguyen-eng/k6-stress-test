@@ -113,7 +113,8 @@ export function setup() {
 export function reserve(data) {
   const pool = data.users;
   const user = pool[(__VU + __ITER) % pool.length];
-  const spaceId = (user.index % MAX_SPACE_ID) + 1;
+  // spaceId derived from VU to guarantee all 80 spaces are always targeted
+  const spaceId = (__VU % MAX_SPACE_ID) + 1;
 
   const res = http.post(
     `${BASE_URL}/api/parking/reserve`,
