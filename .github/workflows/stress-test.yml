@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       reservation_date:
-        description: 'Reservation date (YYYY-MM-DD) — dùng ngày chưa có data'
+        description: 'Reservation date (YYYY-MM-DD) — use a date with no existing data'
         required: false
         default: ''
       rate:

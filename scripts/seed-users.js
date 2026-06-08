@@ -1,11 +1,11 @@
 /**
- * SETUP ONLY — không phải stress test.
- * Tạo đủ USER_COUNT user: loaduser_{START} .. loaduser_{START+COUNT-1}, mỗi user deposit.
- * User đã tồn tại → bỏ qua register, login + deposit (chạy lại an toàn).
+ * SETUP ONLY — not a stress test.
+ * Creates USER_COUNT users: loaduser_{START} .. loaduser_{START+COUNT-1}, each with deposit.
+ * Existing users → skip register, just login + deposit (safe to re-run).
  *
  * Usage:
- *   k6 run scripts/seed-users.js                              # tạo 1000 user từ 0
- *   k6 run scripts/seed-users.js -e USER_COUNT=500 -e SEED_START_INDEX=1000  # thêm 500 user từ 1000
+ *   k6 run scripts/seed-users.js                              # seed 1000 users from index 0
+ *   k6 run scripts/seed-users.js -e USER_COUNT=500 -e SEED_START_INDEX=1000  # add 500 users from index 1000
  */
 import http from 'k6/http';
 import exec from 'k6/execution';

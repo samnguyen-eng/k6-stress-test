@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Chỉ cần: ./run-stress-1500.sh
-# (User loaduser_* đã có sẵn — script chỉ login lấy token, không register)
-# Tùy chọn: ./run-stress-1500.sh my-summary.json
+# Usage: ./run-stress-1500.sh
+# (Users loaduser_* must exist — script only logs in to get tokens, no registration)
+# Optional: ./run-stress-1500.sh my-summary.json
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -54,8 +54,8 @@ K6_LOG_LEVEL=error k6 run \
 sleep 5
 echo ""
 
-echo "==> Reserve stress (login ${USER_COUNT} user có sẵn → token, rồi ${RATE}/s × ${DURATION})..."
-echo "    Kỳ vọng ~$(( RATE * 180 )) request nếu không dropped_iterations"
+echo "==> Reserve stress (login ${USER_COUNT} users → tokens, then ${RATE}/s × ${DURATION})..."
+echo "    Expected ~$(( RATE * 180 )) requests if no dropped_iterations"
 echo ""
 
 K6_LOG_LEVEL=error k6 run scripts/reserve-stress.js \
@@ -73,4 +73,4 @@ K6_LOG_LEVEL=error k6 run scripts/reserve-stress.js \
   --summary-export="${OUT}"
 
 echo ""
-echo "==> Xong. Summary: ${OUT}"
+echo "==> Done. Summary: ${OUT}"

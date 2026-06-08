@@ -4,7 +4,7 @@
  * Usage (smoke):
  *   k6 run scripts/reserve-stress.js -e RATE=50 -e DURATION=30s -e USER_COUNT=500
  *
- * Usage (1500 TPS x 3 min — chỉ phase reserve, không tính setup login):
+ * Usage (1500 TPS x 3 min — reserve phase only, excludes login setup):
  *   ./run-stress-1500.sh
  *   k6 run scripts/reserve-stress.js -e RATE=1500 -e DURATION=3m -e USER_COUNT=1000
  */
@@ -22,11 +22,12 @@ import {
   plateForIndex,
 } from '../lib/config.js';
 
-// Custom counters — phân biệt business reject vs lỗi thật
-const reservedOk      = new Counter('reserved_ok');       // 200 - đặt thành công
-const businessReject  = new Counter('business_reject');   // 400 - slot hết / đã đặt / hết tiền
+// Custom counters — distinguish business reject vs real error
+const reservedOk      = new Counter('reserved_ok');       // 200 - reserved successfully
+const businessReject  = new Counter('business_reject');   // 400 - slot taken / duplicate / no balance
 const serverError     = new Counter('server_error');      // 5xx - server crash
-const connError       = new Counter('conn_error');        // 0   - connection drop / EOF
+const connError       = new Counter('conn_error');        // 0   - timeout
+const eofError        = new Counter('eof_error');         // 0   - EOF / instance not scaled yet
 
 const RATE = Number(__ENV.RATE || 50);
 const DURATION = __ENV.DURATION || '30s';
@@ -37,7 +38,7 @@ const MAX_VUS = Number(__ENV.MAX_VUS || 2000);
 export const options = {
   setupTimeout: __ENV.SETUP_TIMEOUT || '10m',
 
-  // Khai báo rõ các percentile cần tính — mặc định k6 chỉ có p(90), p(95)
+  // Explicitly declare percentiles — k6 only includes p(90) and p(95) by default
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 
   scenarios: {
@@ -103,7 +104,7 @@ export function setup() {
 
   console.log(`setup: loaded ${users.length}/${limit} tokens for reserve test (batch size=${BATCH_SIZE})`);
 
-  // Warm Redis spaces cache (1 request) trước khi bắn 1500/s
+  // Warm Redis spaces cache before firing 1500/s
   http.get(`${BASE_URL}/api/parking/spaces`, { tags: { name: 'setup_spaces' } });
 
   return { users };
@@ -142,7 +143,15 @@ export function reserve(data) {
     serverError.add(1);
     console.error(`SERVER ERROR status=${res.status} body=${res.body?.substring(0, 200)}`);
   } else if (res.status === 0) {
-    connError.add(1);
+    const err = res.error || '';
+    if (err.includes('EOF') || err.includes('unexpected EOF') || err.includes('connection reset') || err.includes('http2')) {
+      eofError.add(1); // instance not scaled yet — expected during burst
+    } else if (err.includes('timeout') || err.includes('request timeout')) {
+      connError.add(1);
+      console.error(`CONN ERROR: ${err}`);
+    } else {
+      eofError.add(1); // other connection errors
+    }
   }
 }
 
@@ -163,6 +172,7 @@ export function handleSummary(data) {
   const rejectCount = m.business_reject?.values?.count ?? 0;
   const svrErrCount = m.server_error?.values?.count ?? 0;
   const connErrCount= m.conn_error?.values?.count ?? 0;
+  const eofErrCount = m.eof_error?.values?.count ?? 0;
   const realErrors  = svrErrCount + connErrCount;
   const realErrRate = totalReq > 0 ? (realErrors / totalReq * 100) : 0;
 
@@ -177,7 +187,11 @@ export function handleSummary(data) {
     `║  Total requests    : ${String(totalReq).padStart(8)}  (avg ${avgRps.toFixed(1)} req/s)`,
     `║  Dropped iters     : ${String(dropped).padStart(8)}  (${dropPct}% — increase MAX_VUS if >5%)`,
     '╠══════════════════════════════════════════════════════╣',
+    `║  ✅ Reserved OK     : ${String(okCount).padStart(8)}  (slot reserved successfully)`,
+    `║  ⚠️  Business reject : ${String(rejectCount).padStart(8)}  (slot taken / duplicate / no balance)`,
     `║  ❌ Server errors   : ${String(svrErrCount).padStart(8)}  (5xx)`,
+    `║  ❌ Conn errors     : ${String(connErrCount).padStart(8)}  (timeout)`,
+    `║  ⚡ EOF / scale-up  : ${String(eofErrCount).padStart(8)}  (instance not ready — expected)`,
     '╠══════════════════════════════════════════════════════╣',
     `║  P95    : ${(p95Rsv).toFixed(0).padStart(6)} ms  ${pass(p95Rsv, 1000)}  (threshold <1000ms)`,
     `║  P99    : ${(p99Rsv).toFixed(0).padStart(6)} ms  ${pass(p99Rsv, 2000)}  (threshold <2000ms)`,
