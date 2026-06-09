@@ -21,7 +21,7 @@ export MAX_VUS="${MAX_VUS:-1000}"
 OUT="${1:-load-summary.json}"
 
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║  LOAD TEST  ${RATE} req/s × ${DURATION}  (15% me / 15% spaces / 70% reserve)"
+echo "║  LOAD TEST  ${RATE} req/s × ${DURATION}  (10% me / 10% spaces / 80% reserve)"
 echo "╠══════════════════════════════════════════════════════════╣"
 echo "║  date=${RESERVATION_DATE}  users=${USER_COUNT}  maxVUs=${MAX_VUS}"
 echo "╚══════════════════════════════════════════════════════════╝"

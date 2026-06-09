@@ -1,4 +1,4 @@
-name: Load Test — 15/15/70 mix
+name: Load Test — 10/10/80 mix
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ on:
 
 jobs:
   load-test:
-    name: k6 Load Test (15% me / 15% spaces / 70% reserve)
+    name: k6 Load Test (10% me / 10% spaces / 80% reserve)
     runs-on: self-hosted
 
     steps:
