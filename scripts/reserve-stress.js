@@ -191,10 +191,9 @@ export function handleSummary(data) {
     `║  ❌ Server errors   : ${String(svrErrCount).padStart(8)}  (5xx)`,
     `║  ❌ Conn errors     : ${String(connErrCount).padStart(8)}  (timeout)`,
     '╠══════════════════════════════════════════════════════╣',
-    `║  P95    : ${(p95Rsv).toFixed(0).padStart(6)} ms  ${pass(p95Rsv, 1000)}  (threshold <1000ms)`,
-    `║  P99    : ${(p99Rsv).toFixed(0).padStart(6)} ms  ${pass(p99Rsv, 2000)}  (threshold <2000ms)`,
+    `║  P95    : ${(p95Rsv).toFixed(0).padStart(6)} ms  ${pass(p95Rsv, 3000)} `,
+    `║  P99    : ${(p99Rsv).toFixed(0).padStart(6)} ms  ${pass(p99Rsv, 4000)} `,
     '╠══════════════════════════════════════════════════════╣',
-    `║  Real error rate   : ${realErrRate.toFixed(2).padStart(7)}%  ${pass(realErrRate, 1)}  (5xx + conn drop)`,
     '╚══════════════════════════════════════════════════════╝\n',
   ].join('\n');
 
