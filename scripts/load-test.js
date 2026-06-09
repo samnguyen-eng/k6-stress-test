@@ -182,21 +182,16 @@ export function handleSummary(data) {
 
   const lines = [
     '\n╔══════════════════════════════════════════════════════╗',
-    '║         LOAD TEST SUMMARY — 15/15/70 mix             ║',
+    '║         LOAD TEST SUMMARY                            ║',
     '╠══════════════════════════════════════════════════════╣',
     `║  Total requests    : ${String(totalReq).padStart(8)}  (avg ${avgRps.toFixed(1)} req/s)`,
     `║  Dropped iters     : ${String(dropped).padStart(8)}  (${dropPct}% — increase MAX_VUS if >5%)`,
     '╠══════════════════════════════════════════════════════╣',
-    `║  ✅ Success         : ${String(okCount).padStart(8)}  (200 OK)`,
-    `║  ⚠️  Business reject : ${String(rejectCount).padStart(8)}  (400/409/429 — normal)`,
     `║  ❌ Server errors   : ${String(svrErr).padStart(8)}  (5xx)`,
     `║  ❌ Conn errors     : ${String(connErr).padStart(8)}  (timeout)`,
-    `║  ⚡ EOF / scale-up  : ${String(eofErr).padStart(8)}  (expected during burst)`,
     '╠══════════════════════════════════════════════════════╣',
     `║  P95 (HTTP only)   : ${p95.padStart(6)} ms  ${pass(Number(p95), 3000)}  (threshold <3000ms)`,
     `║  P99 (HTTP only)   : ${p99.padStart(6)} ms  ${pass(Number(p99), 5000)}  (threshold <5000ms)`,
-    '╠══════════════════════════════════════════════════════╣',
-    `║  Real error rate   : ${realErrRate.toFixed(2).padStart(7)}%  ${pass(realErrRate, 1)}  (5xx + conn drop)`,
     '╚══════════════════════════════════════════════════════╝\n',
   ].join('\n');
 
