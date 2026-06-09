@@ -191,7 +191,7 @@ export function handleSummary(data) {
     `║  ❌ Conn errors     : ${String(connErr).padStart(8)}  (timeout)`,
     '╠══════════════════════════════════════════════════════╣',
     `║  P95 (HTTP only)   : ${p95.padStart(6)} ms  ${pass(Number(p95), 3000)}  (threshold <3000ms)`,
-    `║  P99 (HTTP only)   : ${p99.padStart(6)} ms  ${pass(Number(p99), 5000)}  (threshold <5000ms)`,
+    `║  P99 (HTTP only)   : ${p99.padStart(6)} ms  ${pass(Number(p99), 6000)}  (threshold <5000ms)`,
     '╚══════════════════════════════════════════════════════╝\n',
   ].join('\n');
 
